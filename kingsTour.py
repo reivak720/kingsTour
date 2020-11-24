@@ -1,3 +1,5 @@
+# author @reivaJ
+
 from collections import defaultdict
 from itertools import product
 import sys
