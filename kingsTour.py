@@ -108,5 +108,5 @@ if __name__ == "__main__":
     height = 10
     width = 10
     start = choice(list(product(range(height), range(width)))) 
-    p = PathFinder(10, 10, start)
+    p = PathFinder(height, width, start)
     p.representSolution()
