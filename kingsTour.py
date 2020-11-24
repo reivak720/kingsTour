@@ -75,6 +75,9 @@ class PathFinder(object):
     
     def get_graph(self):
         return self.graph
+    
+    def get_path(self):
+        return self.path
 
     def goDeep(self, start, path=[]): 
         node = start
