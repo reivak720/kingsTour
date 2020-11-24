@@ -37,7 +37,6 @@ class BoardGraph(object):
                 return corner 
         
     def updateWeight(self, node, path):
-      
         corner = self.getCorner(node)
         for children in self.childrenOf(node):
             available_children = 0
@@ -60,35 +59,51 @@ class BoardGraph(object):
             print ("Node:", node, "     Children:", children)
 
 
-def loanlyCornerDepth(graph, start, path=[]): 
-    node = start
-    path.append(node)   
-    if all(node in path for node in graph.getEdges()):
-        return path    
-    graph.updateWeight(node, path)
-    for n in graph.childrenOf(node):
-        if n not in path:
-            new_path = loanlyCornerDepth(graph, n, path)
-            if new_path != None:
-                return path
-    if len(path) != 1:
-        path.remove(node)
+class PathFinder(object):
+
+    def __init__(self, height, width, start):
+        self.height = height
+        self.width = width
+        self.graph = BoardGraph(height, width)
+        if start not in self.graph.getEdges():
+            raise ValueError ('Start possition must be within graph.')
+        self.start = start
+        self.path = self.goDeep(start)
+
+    def get_start(self):
+        return self.start
+    
+    def get_graph(self):
+        return self.graph
+
+    def goDeep(self, start, path=[]): 
+        node = start
+        path.append(node)   
+        if all(node in path for node in self.graph.getEdges()):
+            return path    
+        self.graph.updateWeight(node, path)
+        for n in self.graph.childrenOf(node):
+            if n not in path:
+                new_path = self.goDeep(n, path)
+                if new_path != None:
+                    return path
+        if len(path) != 1:
+            path.remove(node)
 
 
-def representSolution(solution, height, width):
-    model = np.zeros((height, width), dtype = int)
-    step = 1
-    for coordinate in solution:
-        model[coordinate] = step
-        step += 1
-    print(model)
+    def representSolution(self):
+        model = np.zeros((self.height, self.width), dtype = int)
+        step = 1
+        for coordinate in self.path:
+            model[coordinate] = step
+            step += 1
+        print(model)
 
 
 
 if __name__ == "__main__":
     height = 10
     width = 10
-    g = BoardGraph(height, width)
-    start = choice(list(product(range(height), range(width))))
-    print (start)
-    representSolution(loanlyCornerDepth(g, start), height, width)
+    start = choice(list(product(range(height), range(width)))) 
+    p = PathFinder(10, 10, start)
+    p.representSolution()
