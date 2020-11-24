@@ -65,7 +65,7 @@ def loanlyCornerDepth(graph, start, path=[]):
     path.append(node)   
     if all(node in path for node in graph.getEdges()):
         return path    
-    g.updateWeight(node, path)
+    graph.updateWeight(node, path)
     for n in graph.childrenOf(node):
         if n not in path:
             new_path = loanlyCornerDepth(graph, n, path)
