@@ -37,7 +37,7 @@ class BoardGraph(object):
                 return corner 
         
     def updateWeight(self, node, path):
-        possible_md = []
+      
         corner = self.getCorner(node)
         for children in self.childrenOf(node):
             available_children = 0
