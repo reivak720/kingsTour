@@ -1,7 +1,7 @@
 # author @reivaJ
 
 from collections import defaultdict
-from itertools import product
+from itertools import product, combinations
 import sys
 import numpy as np
 from random import choice
@@ -29,41 +29,35 @@ class BoardGraph(object):
         '''
         Connects nodes and children
         '''
-        for node in self.nodes:
-            for children in self.nodes:
-                if children != node and abs(node[0] - children[0]) <=1 and abs(node[1] - children[1]) <=1:
-                    self.edges[node][children] = 0
+        for (n1, n2) in combinations(self.nodes, 2):
+                if abs(n1[0] - n2[0]) <= 1 and abs(n1[1] - n2[1]) <= 1:
+                    self.edges[n1][n2] = 0
+                    self.edges[n2][n1] = 0
 
 
-    def cornerWeight(self, child, corner):
-        '''
-        the closer the coordinate is to the corner, lower value
-        '''
-        value = abs(child[0]-corner[0]) + abs(child[1] - corner[1])
-        return value
+    def dist_l1_norm(self, m, n):
+        '''Distance using norm l1: https://en.wikipedia.org/wiki/Taxicab_geometry .'''
+        return abs(m[0] - n[0]) + abs(m[1] - n[1])
     
-    def getCorner(self, node):
+    def get_closest_corner(self, node):
         '''
         get the closest corner to a node
         '''
-        corners = [(0,0), (0, self.width - 1), (self.height-1, 0), (self.height-1, self.width-1)]
-        for corner in corners:
-            if abs(corner[0] - node[0]) < self.height/2 and abs(corner[1] - node[1]) < self.width/2:
-                return corner 
+        x = 0 if node[0] < self.height/2 else self.height-1
+        y = 0 if node[1] < self.width/2 else self.width-1
+        return (x, y)
         
-    def updateWeight(self, node, path):
+    def update_weight(self, node, path):
         '''
         update weights for children of a node based on their 
         available children and distance to corner
         '''
-        corner = self.getCorner(node)
+        corner = self.get_closest_corner(node)
         for children in self.childrenOf(node):
-            available_children = 0
-            for child in self.childrenOf(children):                
-                if child not in path:
-                    available_children += 1
-            available_children += self.cornerWeight(children, corner)
-            self.edges[node][children] = available_children 
+            self.edges[node][children] = \
+                self.dist_l1_norm(children, corner) + \
+                sum(child not in path for child in self.childrenOf(children))
+
 
     def childrenOf(self, node):
        '''
@@ -109,7 +103,7 @@ class PathFinder(object):
         if start not in self.graph.getNodes():
             raise ValueError ('Start possition must be within graph.')
         self.start = start
-        self.path = self.goDeep(start)
+        self.path = self.depth_first_search(start)
 
     def get_start(self):
         '''
@@ -129,25 +123,24 @@ class PathFinder(object):
         '''
         return self.path
 
-    def goDeep(self, start, path=[]): 
+    def depth_first_search(self, start, starting_path=[]):
         '''
-        recursive deapht-first search
+        recursive depth-first search
         '''
-        node = start
-        path.append(node)   
+        path = starting_path + [start]
         if all(node in path for node in self.graph.getNodes()):
-            return path    
-        self.graph.updateWeight(node, path)
-        for n in self.graph.childrenOf(node):
+            return path
+        self.graph.update_weight(start, path)
+        for n in self.graph.childrenOf(start):
             if n not in path:
-                new_path = self.goDeep(n, path)
+                new_path = self.depth_first_search(n, path)
                 if new_path != None:
-                    return path
-        if len(path) != 1:
-            path.remove(node)
+                    return new_path
+        return None
 
 
-    def representSolution(self):
+
+    def represent_solution(self):
         '''
         represents path as an array
         1 is starting point and largest number
@@ -167,4 +160,4 @@ if __name__ == "__main__":
     width = 10
     start = choice(list(product(range(height), range(width)))) 
     p = PathFinder(height, width, start)
-    p.representSolution()
+    p.represent_solution()
