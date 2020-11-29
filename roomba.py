@@ -8,7 +8,7 @@ import kingsTour as kt
 
 import pylab
 
-# === Provided class Position
+# === Modified provided class Position
 class Position(object):
     """
     A Position represents a location in a two-dimensional room.
@@ -274,8 +274,7 @@ class StandardRobot(Robot):
         self.room.cleanTileAtPosition(self.pos)
 
 
-# Uncomment this line to see your implementation of StandardRobot in action!
-#testRobotMovement(StandardRobot, RectangularRoom)
+
 # Problem 4
 def runSimulation(num_robots, speed, width, height, min_coverage, num_trials,
                   robot_type):
@@ -380,15 +379,15 @@ def showPlot1(title, x_label, y_label):
     """
     What information does the plot produced by this function tell you?
     """
-    num_robot_range = range(1, 11)
+    num_robot_range = range(1, 8)
     times1 = []
     times2 = []
     times3 = []
     for num_robots in num_robot_range:
         print("Plotting", num_robots, "robots...")
-        times1.append(runSimulation(num_robots, 1.0, 20, 20, 0.8, 20, StandardRobot))
-        times2.append(runSimulation(num_robots, 1.0, 20, 20, 0.8, 20, RandomWalkRobot))
-        times3.append(runSimulation(num_robots, 1.0, 20, 20, 0.8, 20, GraphDrivenRobot))
+        times1.append(runSimulation(num_robots, 1.0, 20, 20, 0.8, 10, StandardRobot))
+        times2.append(runSimulation(num_robots, 1.0, 20, 20, 0.8, 10, RandomWalkRobot))
+        times3.append(runSimulation(num_robots, 1.0, 20, 20, 0.8, 10, GraphDrivenRobot))
     pylab.plot(num_robot_range, times1)
     pylab.plot(num_robot_range, times2)
     pylab.plot(num_robot_range, times3)
@@ -411,24 +410,24 @@ def showPlot2(title, x_label, y_label):
         height = 300//width
         print("Plotting cleaning time for a room of width:", width, "by height:", height)
         aspect_ratios.append(float(width) / height)
-        times1.append(runSimulation(1, 1.0, width, height, 0.8, 20, StandardRobot))
-        times2.append(runSimulation(2, 1.0, width, height, 0.8, 20, RandomWalkRobot))
-        times3.append(runSimulation(1, 1.0, width, height, 0.8, 20, GraphDrivenRobot))
+        times1.append(runSimulation(1, 1.0, width, height, 0.8, 100, StandardRobot))
+        times2.append(runSimulation(2, 1.0, width, height, 0.8, 100, RandomWalkRobot))
+        times3.append(runSimulation(1, 1.0, width, height, 0.8, 100, GraphDrivenRobot))
     pylab.plot(aspect_ratios, times1)
     pylab.plot(aspect_ratios, times2)
     pylab.plot(aspect_ratios, times3)
     pylab.title(title)
-    pylab.legend(('StandardRobot', 'GraphDrivenRobot'))
+    pylab.legend(('StandardRobot', 'RandomWalkRobot', 'GraphDrivenRobot'))
     pylab.xlabel(x_label)
     pylab.ylabel(y_label)
     pylab.show()
 
 
 if __name__ == "__main__":
-    print ("Results for 10x10 room, 1 robot")
+    print ("Results in seconds for 10x10 room, 1 robot")
     print("GraphDrivenRobot:", runSimulation(1, 1, 10, 10, 1, 50, GraphDrivenRobot))
     print ("StandardRobot:", runSimulation(1,1,10,10,1, 50, StandardRobot))
-    print ("RandomWalkRobot:", runSimulation(1,1,10,10,1,50,RandomWalkRobot), "\n"))
+    print ("RandomWalkRobot:", runSimulation(1,1,10,10,1,50,RandomWalkRobot), "\n")
 
 
 
@@ -448,5 +447,5 @@ if __name__ == "__main__":
 #     plot.
 #
 #       (... your call here ...)
-# will not work for GraphDrivenRobot, known issue
- #   showPlot2("robots", "aspect_ratios", "time")
+# issue fixed
+    showPlot2("robots", "aspect_ratios", "time")
