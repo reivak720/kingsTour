@@ -26,7 +26,7 @@ class BoardGraph(object):
         self.nodes =  list(product(range(height), range(width)))
         self.edges = defaultdict(dict)
         self.breed()
-        self.aspectRatio = self.width/self.height
+    
 
     def breed(self):
         '''
@@ -106,11 +106,25 @@ class PathFinder(object):
         '''
         self.height = height
         self.width = width
-        self.graph = BoardGraph(height, width)
-        if start not in self.graph.getNodes():
-            raise ValueError ('Start possition must be within graph.')
+        self.aspectRatio = self.width/self.height
+
+        tranpose = False
+        if self.aspectRatio >= 50//6:
+            self.width, self.height = self.height, self.width
+            tranpose = True
+        self.graph = BoardGraph(self.height, self.width)
         self.start = start
-        self.path = self.depth_first_search(start)
+        if tranpose:
+            self.start = tuple(reversed(start))
+            if self.start not in self.graph.getNodes():
+                raise ValueError ('Start possition must be within graph.')     
+
+            path = self.depth_first_search(self.start)
+            self.path = [tuple(reversed(element)) for element in path]
+        else:
+            if self.start not in self.graph.getNodes():
+                raise ValueError ('Start possition must be within graph.')
+            self.path = self.depth_first_search(start)
 
     def get_start(self):
         '''returns starting point'''
@@ -155,7 +169,6 @@ class PathFinder(object):
             model[coordinate] = step
             step += 1
         print(np.flipud(model))
-
 
 
 if __name__ == "__main__":
