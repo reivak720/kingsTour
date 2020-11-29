@@ -8,10 +8,12 @@ from random import choice
 from operator import itemgetter
 
 sys.setrecursionlimit(1500)
+
 class BoardGraph(object):
     '''
     Square room graph, connecting continous tile spaces
     '''
+
     def __init__(self, height, width): 
         '''
         Parameters:
@@ -24,6 +26,7 @@ class BoardGraph(object):
         self.nodes =  list(product(range(height), range(width)))
         self.edges = defaultdict(dict)
         self.breed()
+        self.aspectRatio = self.width/self.height
 
     def breed(self):
         '''
@@ -39,6 +42,7 @@ class BoardGraph(object):
         '''Distance using norm l1: https://en.wikipedia.org/wiki/Taxicab_geometry .'''
         return abs(m[0] - n[0]) + abs(m[1] - n[1])
     
+
     def get_closest_corner(self, node):
         '''
         get the closest corner to a node
@@ -47,6 +51,7 @@ class BoardGraph(object):
         y = 0 if node[1] < self.width/2 else self.width-1
         return (x, y)
         
+
     def update_weight(self, node, path):
         '''
         update weights for children of a node based on their 
@@ -55,7 +60,6 @@ class BoardGraph(object):
         corner = self.get_closest_corner(node)
         for children in self.childrenOf(node):
             available_children =sum(child not in path for child in self.childrenOf(children))
-
             self.edges[node][children] = \
                 self.dist_l1_norm(children, corner) + \
                 available_children
@@ -109,21 +113,15 @@ class PathFinder(object):
         self.path = self.depth_first_search(start)
 
     def get_start(self):
-        '''
-        returns starting point
-        '''
+        '''returns starting point'''
         return self.start
     
     def get_graph(self):
-        '''
-        returns graph
-        '''
+        '''returns graph'''
         return self.graph
     
     def get_path(self):
-        '''
-        returns path
-        '''
+        '''returns path'''
         return self.path
 
     def depth_first_search(self, start, starting_path=[]):
@@ -139,7 +137,9 @@ class PathFinder(object):
                 new_path = self.depth_first_search(n, path)
                 if new_path != None:
                     return new_path
+        self.graph.breed()
         return None
+
 
 
 
@@ -154,7 +154,7 @@ class PathFinder(object):
         for coordinate in self.path:
             model[coordinate] = step
             step += 1
-        print(model)
+        print(np.flipud(model))
 
 
 
