@@ -55,9 +55,7 @@ class BoardGraph(object):
         corner = self.get_closest_corner(node)
         for children in self.childrenOf(node):
             available_children =sum(child not in path for child in self.childrenOf(children))
-            if available_children == 0: # no men left behind
-                self.edges[node] = {children: 0}
-                break
+
             self.edges[node][children] = \
                 self.dist_l1_norm(children, corner) + \
                 available_children
