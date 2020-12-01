@@ -1,4 +1,9 @@
-# author @reivaJ
+''''
+kingsTour
+author: @reivaJ
+using powerful functions by Guttag,
+make a king dance
+'''
 
 from collections import defaultdict
 from itertools import product, combinations
@@ -8,6 +13,56 @@ from random import choice
 from operator import itemgetter
 
 sys.setrecursionlimit(1500)
+
+
+def merge(left, right, compare):
+    '''Assumes left and right are sorted lists and
+        compare defines an ordering on the elements,
+    Returns a new sorted(by compare) list containing
+        the same elements as (left+right) would contain'''
+
+    result = []
+    i, j = 0, 0
+    while i < len(left) and j < len(right):
+        if compare(left[i], right[j]):
+            result.append(left[i])
+            i+=1
+        else:
+            result.append(right[j])
+            j+= 1
+    while (i< len(left)):
+        result.append(left[i])
+        i += 1
+    while (j < len(right)):
+        result.append(right[j])
+        j += 1
+    return result
+
+
+def mergeSort(L, compare = lambda x, y : x< y):
+    '''Assumes L a list, compare defines an ordering
+            on elements of L'''
+
+    if len(L) < 2:
+        return L[:]
+    else:
+        middle = len(L)//2
+        left = mergeSort(L[:middle], compare)
+        right = mergeSort(L[middle:], compare)
+        return merge(left, right, compare)
+
+
+def firstWidth(arg1, arg2):
+    '''Parameteres:
+    arg1 & arg2: ((x, y), weight); all type: int
+    compares by weight, else by y'''
+
+    if arg1[1] != arg2[1]:
+        return arg1[1] < arg2[1]
+    else:
+        return arg1[0][1] < arg2[0][1]
+
+
 
 class BoardGraph(object):
     '''
@@ -26,7 +81,7 @@ class BoardGraph(object):
         self.nodes =  list(product(range(height), range(width)))
         self.edges = defaultdict(dict)
         self.breed()
-    
+
 
     def breed(self):
         '''
@@ -39,7 +94,9 @@ class BoardGraph(object):
 
 
     def dist_l1_norm(self, m, n):
-        '''Distance using norm l1: https://en.wikipedia.org/wiki/Taxicab_geometry .'''
+        '''
+        Distance using norm l1: https://en.wikipedia.org/wiki/Taxicab_geometry 
+        '''
         return abs(m[0] - n[0]) + abs(m[1] - n[1])
     
 
@@ -65,13 +122,19 @@ class BoardGraph(object):
                 available_children
 
 
-
     def childrenOf(self, node):
        '''
        returns the children of a node
+       sorts by weight of node
+       if room is wider than high it will sort by y
+       else by x
        '''
-       children = sorted(self.edges[node].items(), key = itemgetter(1))
-       return[child[0] for child in children]
+       if self.width/self.height > 1:
+            ordered = mergeSort(list(self.edges[node].items()), firstWidth)
+       else:
+            ordered = sorted(self.edges[node].items(), key = itemgetter(1))
+       return [child[0] for child in ordered]
+
 
     def getNodes(self):
         '''
@@ -79,11 +142,13 @@ class BoardGraph(object):
         '''
         return self.nodes
     
+
     def getEdges(self):
         '''
         returns self.edges
         '''
         return self.edges
+
 
     def printGraph(self):
         '''
@@ -91,6 +156,7 @@ class BoardGraph(object):
         '''
         for node, children in self.edges.items():
             print ("Node:", node, "     Children:", children)
+
 
 
 class PathFinder(object):
@@ -106,37 +172,30 @@ class PathFinder(object):
         '''
         self.height = height
         self.width = width
-        self.aspectRatio = self.width/self.height
 
-        tranpose = False
-        if self.aspectRatio >= 50//6:
-            self.width, self.height = self.height, self.width
-            tranpose = True
         self.graph = BoardGraph(self.height, self.width)
         self.start = start
-        if tranpose:
-            self.start = tuple(reversed(start))
-            if self.start not in self.graph.getNodes():
-                raise ValueError ('Start possition must be within graph.')     
 
-            path = self.depth_first_search(self.start)
-            self.path = [tuple(reversed(element)) for element in path]
-        else:
-            if self.start not in self.graph.getNodes():
-                raise ValueError ('Start possition must be within graph.')
-            self.path = self.depth_first_search(start)
+        if self.start not in self.graph.getNodes():
+            raise ValueError ('Start possition must be within graph.')     
+
+        self.path = self.depth_first_search(start)
+
 
     def get_start(self):
         '''returns starting point'''
         return self.start
-    
+
+
     def get_graph(self):
         '''returns graph'''
         return self.graph
-    
+
+
     def get_path(self):
         '''returns path'''
         return self.path
+
 
     def depth_first_search(self, start, starting_path=[]):
         '''
@@ -155,8 +214,6 @@ class PathFinder(object):
         return None
 
 
-
-
     def represent_solution(self):
         '''
         represents path as an array
@@ -171,8 +228,9 @@ class PathFinder(object):
         print(np.flipud(model))
 
 
+
 if __name__ == "__main__":
-    height = 10
+    height =10
     width = 10
     start = choice(list(product(range(height), range(width)))) 
     p = PathFinder(height, width, start)
