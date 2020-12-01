@@ -210,7 +210,7 @@ class PathFinder(object):
                 new_path = self.depth_first_search(n, path)
                 if new_path != None:
                     return new_path
-        self.graph.breed()
+ 
         return None
 
 
