@@ -1,11 +1,11 @@
-
-# 6.00.2x Problem Set 2: Simulating robots
-# author : @reivaJ
+'''
+ 6.00.2x Problem Set 2: Simulating robots
+author: @reivaJ
+'''
 from itertools import product
 import random
 import math
-import kingsTour as kt
-
+import kingsTour
 import pylab
 
 # === Modified provided class Position
@@ -28,7 +28,12 @@ class Position(object):
         return self.y
 
     def getTimeToPos(self, other, speed):
-        '''compute time to a place with Pithagoras'''
+        '''
+        Parameters:
+        other: class Position
+        speed: type int
+        returns time calculated with Pithagoras
+        '''
         old_x, old_y = self.getX(), self.getY()
         new_x, new_y = other.getX(), other.getY()
         x_dist = abs(new_x - old_x)
@@ -38,7 +43,11 @@ class Position(object):
 
 
     def getBearing(self, other):
-        '''compute heading by find bearing navigation trigonometry'''
+        '''
+        Parameters:
+        other: class Possition
+        returns heading calculate with bearing navigation trigonometry
+        '''
         old_x, old_y = math.radians(self.getX()), math.radians(self.getY())
         new_x, new_y = math.radians(other.getX()), math.radians(other.getY())
         incL = new_y- old_y
@@ -71,6 +80,10 @@ class Position(object):
         new_x = old_x + delta_x
         new_y = old_y + delta_y
         return Position(new_x, new_y)
+
+    def __eq__(self, other):
+        if self.getX() == other.getX() and self.getY == other.getY():
+            return True
 
     def __str__(self):
         return "(%0.2f, %0.2f)" % (self.x, self.y)
@@ -172,7 +185,7 @@ class RectangularRoom(object):
 
         tile = (pos.getX(), pos.getY())
 
-        if all(posi >= 0 for posi in tile):
+        if all(round(posi, 2) >= 0 for posi in tile):
             tile = tuple(int(num) for num in tile)
             return True if tile in self.room_map else False
 
@@ -268,9 +281,9 @@ class StandardRobot(Robot):
         """
         new_pos = self.pos.getNewPosition(self.direction, self.speed)
         while not self.room.isPositionInRoom(new_pos):
-            self.direction = random.choice(range(360))
+            self.setRobotDirection(random.choice(range(360)))
             new_pos = self.pos.getNewPosition(self.direction, self.speed)
-        self.pos = new_pos
+        self.setRobotPosition(new_pos)
         self.room.cleanTileAtPosition(self.pos)
 
 
@@ -296,15 +309,15 @@ def runSimulation(num_robots, speed, width, height, min_coverage, num_trials,
     """
 
     clicks = []
-    for i in range(num_trials):
+    for _ in range(num_trials):
         room = RectangularRoom(width, height)
-        robots = [robot_type(room, speed) for i in range(num_robots)]
+        robots = [robot_type(room, speed) for _ in range(num_robots)]
         click = 0
 
         while room.getNumCleanedTiles()/room.getNumTiles() < min_coverage:
             for robot in robots:
                 robot.updatePositionAndClean()
-            click += (1/(len(robots)))
+            click += 1/(len(robots))
         clicks.append(click)
     return round(sum(clicks) / len(clicks),0)
 
@@ -323,12 +336,12 @@ class RandomWalkRobot(Robot):
         Move the robot to a new position and mark the tile it is on as having
         been cleaned.
         """
-        self.direction = random.choice(range(360))
+        self.setRobotDirection(random.choice(range(360)))
         new_pos = self.pos.getNewPosition(self.direction, self.speed)
         while not self.room.isPositionInRoom(new_pos):
             self.direction = random.choice(range(360))
             new_pos = self.pos.getNewPosition(self.direction, self.speed)
-        self.pos = new_pos
+        self.setRobotPosition(new_pos)
         self.room.cleanTileAtPosition(self.pos)
 
 
@@ -340,31 +353,58 @@ class GraphDrivenRobot(Robot):
     for cleaning the room'''
 
     def __init__(self, room, speed):
+        '''
+        initialices the robot, 
+        gets the path provided by kingsTour
+        calculates the headings from position to position in path
+        calculates current heading to first position
+        '''
         Robot.__init__(self, room, speed)
         height, width = self.room.get_dimensions()
-        positions = kt.PathFinder(height,width,(int(self.pos.getX()), int(self.pos.getY())))
-        self.positions = [Position(x, y) for x, y in positions.get_path()]
+        positions = kingsTour.PathFinder(height,width,(int(self.pos.getX()), int(self.pos.getY())))
+        self.positions = [Position(float(x), float(y)) for x, y in positions.get_path()]
         self.headings = [pos.getBearing(self.positions[i+1]) for i, pos in enumerate(self.positions[:-1])]
         self.time_step = 0
-        self.current_heading = self.pos.getBearing(self.positions[0])
+        self.setRobotDirection(self.pos.getBearing(self.positions[0]))
 
+
+    def get_positions(self):
+        '''returns path provided by kingsTour'''
+        return self.positions
+
+    def get_headings(self):
+        '''returns calculated headings'''
+        return self.headings
 
     def Navigate(self, time):
+        '''
+        Parameters:
+        time: float or int
+        navigates in a direction for a period of time,
+        if there is a change in direction it changes heading and returns time
+        else it navigates in the current direction and returns 0
+        '''
         t_to_next = self.pos.getTimeToPos(self.positions[self.time_step], self.speed)
         if t_to_next <= time:
-            if self.time_step< len(self.headings):
-                self.current_heading = self.headings[self.time_step]
-            self.pos = self.positions[self.time_step]
+            if self.time_step < len(self.headings):
+                self.setRobotDirection(self.headings[self.time_step])
+            self.setRobotPosition(self.positions[self.time_step])
             self.time_step += 1
             self.room.cleanTileAtPosition(self.pos)
             time -= t_to_next
         else:
-            self.pos = self.pos.getNewPosition(self.current_heading, self.speed, time)
+            new_pos = self.pos.getNewPosition(self.getRobotDirection(), self.speed, time)
+            self.setRobotPosition(new_pos)
+            if not self.room.isPositionInRoom(self.pos):
+                raise ValueError("Position Not in Room")
             time = 0
         return time
 
 
     def updatePositionAndClean(self, time = 1):
+        ''''
+        Keeps navigating untill the time is 0
+        '''
         while time != 0:
             new_time = self.Navigate(time)
             time = new_time
@@ -385,9 +425,9 @@ def showPlot1(title, x_label, y_label):
     times3 = []
     for num_robots in num_robot_range:
         print("Plotting", num_robots, "robots...")
-        times1.append(runSimulation(num_robots, 1.0, 20, 20, 0.8, 10, StandardRobot))
-        times2.append(runSimulation(num_robots, 1.0, 20, 20, 0.8, 10, RandomWalkRobot))
-        times3.append(runSimulation(num_robots, 1.0, 20, 20, 0.8, 10, GraphDrivenRobot))
+        times1.append(runSimulation(num_robots, 1.0, 20, 20, 0.8, 20, StandardRobot))
+        times2.append(runSimulation(num_robots, 1.0, 20, 20, 0.8, 20, RandomWalkRobot))
+        times3.append(runSimulation(num_robots, 1.0, 20, 20, 0.8, 20, GraphDrivenRobot))
     pylab.plot(num_robot_range, times1)
     pylab.plot(num_robot_range, times2)
     pylab.plot(num_robot_range, times3)
@@ -425,9 +465,9 @@ def showPlot2(title, x_label, y_label):
 
 if __name__ == "__main__":
     print ("Results in seconds for 10x10 room, 1 robot")
-    print("GraphDrivenRobot:", runSimulation(1, 1, 10, 10, 1, 50, GraphDrivenRobot))
-    print ("StandardRobot:", runSimulation(1,1,10,10,1, 50, StandardRobot))
-    print ("RandomWalkRobot:", runSimulation(1,1,10,10,1,50,RandomWalkRobot), "\n")
+    print("GraphDrivenRobot:", runSimulation(1, 1,10, 10, 1, 200, GraphDrivenRobot))
+    print ("StandardRobot:", runSimulation(1,1,10,10,1, 200, StandardRobot))
+    print ("RandomWalkRobot:", runSimulation(1,1,10,10,1,200,RandomWalkRobot), "\n")
 
 
 
