@@ -382,9 +382,8 @@ class GraphDrivenRobot(Robot):
         while time != 0:
             new_time = self.Navigate(time)
             time = new_time
-            if len(self.positions) == 0:
+            if self.positions == []:
                 break
-
 
 
 
