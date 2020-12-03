@@ -174,32 +174,6 @@ class TestRandomRobot(unittest.TestCase):
 class TestGraphDrivenRobot(unittest.TestCase):
     r = roomba.RectangularRoom(10, 8)
 
-    def testPositions(self):
-        robot = roomba.GraphDrivenRobot(self.r, 1)
-        position = robot.getRobotPosition()
-        positions = [(int(pos.getX()), int(pos.getY())) for pos in robot.get_positions()]
-        king = kingsTour.PathFinder(8, 10, (int(position.getX()), int(position.getY())))
-        kings_positons = king.get_path()
-        self.assertListEqual(positions, kings_positons)
-
-    def testBearings(self):
-        robot = roomba.GraphDrivenRobot(self.r, 1)
-        headings = robot.get_headings()
-        position = robot.getRobotPosition()
-        king = kingsTour.PathFinder(8, 10, (int(position.getX()), int(position.getY())))
-        kings_positions = [roomba.Position(x, y) for x, y in king.get_path()]
-        kings_bearings = [pos.getBearing(kings_positions[i+1]) for i, pos in enumerate(kings_positions[:-1])]
-        self.assertListEqual(headings, kings_bearings)
-
-    def testNavigate(self):
-        robot = roomba.GraphDrivenRobot(self.r, 1)
-        position = robot.getRobotPosition()
-        positions = robot.get_positions()
-        time_to_way = position.getTimeToPos(positions[0], 1)
-        time = robot.Navigate(time_to_way)
-        r_pos = robot.getRobotPosition()
-        self.assertEqual((positions[0].getX(), positions[0].getY()), (r_pos.getX(), r_pos.getY())) and self.assertEqual(time, 1-time_to_way)
-
     
     def testNavigateRaise(self):
         robot = roomba.GraphDrivenRobot(self.r, 1)
