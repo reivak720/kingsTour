@@ -333,14 +333,16 @@ class GraphDrivenRobot(Robot):
         calculates current heading to first position
         '''
         Robot.__init__(self, room, speed)
-        height, width = self.room.get_dimensions()
-        positions = kingsTour.PathFinder(height,width,(int(self.pos.getX()), int(self.pos.getY())))
-        self.positions = [Position(float(x), float(y)) for x, y in positions.get_path()]
+        self.height, self.width = self.room.get_dimensions()
+        self.get_map()
+        self.setRobotDirection(self.pos.getBearing(self.positions[-1]))
+
+    def get_map(self):
+        kings_path = kingsTour.PathFinder(self.height,self.width,(int(self.pos.getX()), int(self.pos.getY())))
+        self.positions = [Position(float(x), float(y)) for x, y in kings_path.get_path()]
         self.headings = [pos.getBearing(self.positions[i+1]) for i, pos in enumerate(self.positions[:-1])]
         self.positions.reverse()
         self.headings.reverse()
-        self.setRobotDirection(self.pos.getBearing(self.positions[-1]))
-
 
     def get_positions(self):
         '''returns path provided by kingsTour'''
@@ -383,7 +385,9 @@ class GraphDrivenRobot(Robot):
             new_time = self.Navigate(time)
             time = new_time
             if self.positions == []:
-                break
+                self.get_map()
+                self.setRobotDirection(self.headings.pop())
+                self.positions.pop()
 
 
 
